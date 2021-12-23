@@ -1,120 +1,38 @@
-# Provider
-provider "aws" {
-  shared_credentials_file = "/Users/gasan/.aws/credentials"
-  region = "eu-central-1"
+# The following configuration uses a provider which provisions [fake] resources
+# to a fictitious cloud vendor called "Fake Web Services". Configuration for
+# the fakewebservices provider can be found in provider.tf.
+#
+# After running the setup script (./scripts/setup.sh), feel free to change these
+# resources and 'terraform apply' as much as you'd like! These resources are
+# purely for demonstration and created in Terraform Cloud, scoped to your TFC
+# user account.
+#
+# To review the provider and documentation for the available resources and
+# schemas, see: https://registry.terraform.io/providers/hashicorp/fakewebservices
+#
+# If you're looking for the configuration for the remote backend, you can find that
+# in backend.tf.
+
+
+resource "fakewebservices_vpc" "primary_vpc" {
+  name       = "Primary VPC"
+  cidr_block = "0.0.0.0/1"
 }
 
-data "aws_ami" "ubuntu" {
-  most_recent = true
+resource "fakewebservices_server" "servers" {
+  count = 2
 
-  filter {
-    name   = "name"
-    values = ["ubuntu/*"]
-  }
-
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
-  owners = ["aws-marketplace"]
+  name = "Server ${count.index + 1}"
+  type = "t2.micro"
+  vpc  = fakewebservices_vpc.primary_vpc.name
 }
 
-data "aws_caller_identity" "current" {}
-
-data "aws_region" "current" {}
-
-locals {
-  web_instance_type_map = {
-    stage = "t2.nano"
-    prod  = "t2.micro"
-  }
-  web_instance_count_map = {
-    stage = 1
-    prod  = 2
-  }
-  instances = {
-    "t2.nano" = data.aws_ami.ubuntu.id
-    "t2.micro" = data.aws_ami.ubuntu.id
-  }
+resource "fakewebservices_load_balancer" "primary_lb" {
+  name    = "Primary Load Balancer"
+  servers = fakewebservices_server.servers[*].name
 }
 
-resource "aws_instance" "my_instance" {
-  ami           = data.aws_ami.ubuntu.id
-  instance_type = "t2.micro"
-#  count = local.web_instance_count_map[terraform.workspace]
-
-  lifecycle {
-   create_before_destroy = true
-  }
-
-  ebs_block_device {
-    device_name = "/dev/sda"
-    volume_size = 8
-  }
-
-  tags = {
-    Name = "netology"
-  }
+resource "fakewebservices_database" "prod_db" {
+  name = "Production DB"
+  size = 256
 }
-
-#resource "aws_instance" "my_instance2" {
-#  for_each = local.instances
-#
-#  ami           = each.value
-#  instance_type = each.key
-#
-#
-#  ebs_block_device {
-#    device_name = "/dev/sda"
-#    volume_size = 8
-#  }
-#
-#  tags = {
-#    Name = "netology"
-#  }
-#}
-
-
-
-
-
-
-
-
-
-#terraform {
-#  required_providers {
-#    yandex = {
-#      source  = "yandex-cloud/yandex"
-#      version = "0.61.0"
-#    }
-#  }
-#}
-
-# Provider
-#provider "yandex" {
-#  token     = "${var.yc_token}"
-#  cloud_id  = "${var.yc_cloud_id}"
-#  folder_id = "${var.yc_folder_id}"
-#  zone      = "${var.yc_region}"
-#}
-
-
-#module "news" {
-#  source = "../modules/instance"
-#
-#  subnet_id     = "${var.yc_subnet_id}"
-#  image         = "centos-8"
-#  platform_id   = "standard-v2"
-#  name          = "news"
-#  description   = "News App Demo"
-#  instance_role = "news,balancer"
-#  users         = "centos"
-#  cores         = "2"
-#  boot_disk     = "network-ssd"
-#  disk_size     = "20"
-#  nat           = "true"
-#  memory        = "2"
-#  core_fraction = "100"
-#}
-
