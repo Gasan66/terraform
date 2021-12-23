@@ -40,8 +40,8 @@ locals {
 
 resource "aws_instance" "my_instance" {
   ami           = data.aws_ami.ubuntu.id
-  instance_type = local.web_instance_type_map[terraform.workspace]
-  count = local.web_instance_count_map[terraform.workspace]
+  instance_type = "t2.micro"
+#  count = local.web_instance_count_map[terraform.workspace]
 
   lifecycle {
    create_before_destroy = true
@@ -57,22 +57,22 @@ resource "aws_instance" "my_instance" {
   }
 }
 
-resource "aws_instance" "my_instance2" {
-  for_each = local.instances
-
-  ami           = each.value
-  instance_type = each.key
-
-
-  ebs_block_device {
-    device_name = "/dev/sda"
-    volume_size = 8
-  }
-
-  tags = {
-    Name = "netology"
-  }
-}
+#resource "aws_instance" "my_instance2" {
+#  for_each = local.instances
+#
+#  ami           = each.value
+#  instance_type = each.key
+#
+#
+#  ebs_block_device {
+#    device_name = "/dev/sda"
+#    volume_size = 8
+#  }
+#
+#  tags = {
+#    Name = "netology"
+#  }
+#}
 
 
 
